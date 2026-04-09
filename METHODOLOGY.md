@@ -2,7 +2,7 @@
 
 **Author:** Justin Schneider (independent researcher)
 **Last Updated:** April 2026
-**Status:** Pre-analysis gates complete; THINGS data not yet acquired
+**Status:** Pre-analysis gates complete; THINGS data acquired (de Blok et al. 2008, 19 galaxies)
 
 ---
 
@@ -21,7 +21,7 @@ The analysis plan was pre-registered before acquiring any THINGS data (commit dc
 | Dataset                            | N     | Role                   | Rationale                                            |
 | ---------------------------------- | ----- | ---------------------- | ---------------------------------------------------- |
 | SPARC (Lelli et al. 2016)          | 175   | Baseline anchor        | Internal consistency; reproduces Paper 2 result      |
-| THINGS (Walter et al. 2008)        | 34    | Primary confirmatory   | Independent HI kinematics; 15-galaxy SPARC overlap   |
+| THINGS (de Blok et al. 2008)       | 19    | Primary confirmatory   | Independent HI kinematics; 13-galaxy SPARC overlap   |
 | LITTLE THINGS (Hunter et al. 2012) | 41    | Secondary confirmatory | Dwarf-regime stress test                             |
 | PROBES (~2700)                     | ~2700 | Exploratory only       | Optical M/L uncertainty >= 0.2 dex; not confirmatory |
 
@@ -34,7 +34,7 @@ The analysis plan was pre-registered before acquiring any THINGS data (commit dc
 
 ### THINGS/SPARC Overlap
 
-15 of 34 THINGS galaxies appear in SPARC. Full cross-reference with BIC values from Papers 1 and 2 in `data/things_sparc_overlap.csv`. For overlap galaxies, SPARC baryonic profiles are used with THINGS rotation curves (isolates the kinematic data while holding the baryonic baseline constant). Non-overlap galaxies require independent baryonic decomposition from S4G + THINGS HI maps.
+The THINGS survey parent sample comprises 34 galaxies (Walter et al. 2008), but rotation curves were published for only 19 of them (de Blok et al. 2008). Of these 19, 13 appear in SPARC and 6 are THINGS-only. Full cross-reference in `data/things_sparc_overlap.csv`. For overlap galaxies, SPARC baryonic profiles are used with THINGS rotation curves (isolates the kinematic data while holding the baryonic baseline constant). Non-overlap galaxies require independent baryonic decomposition from S4G + THINGS HI maps.
 
 ---
 
@@ -288,6 +288,8 @@ A power simulation (10,000 iterations, seed=42) was run before THINGS data acqui
 
 At the expected THINGS resolved sample size (N ~ 20-24), the conservative model gives 53-63% power and the realistic model gives 84-93% power to detect a 0.2 dex departure from a0/2. THINGS is designated as the primary confirmatory dataset, with fallback to pilot if resolved N < 15.
 
+**Post-acquisition update:** De Blok et al. (2008) published rotation curves for only 19 of the 34 THINGS galaxies, yielding an expected resolved N ~ 13 (assuming ~70% resolution rate). This falls below the pre-registered N = 15 threshold. We retain THINGS as the primary confirmatory dataset rather than triggering the fallback, because (a) extracting missing rotation curves would violate the independent-pipeline premise, and (b) elevating PROBES would violate Risk 9 (exploratory-only due to >= 0.2 dex M/L uncertainty). The power loss is accepted and will be explicitly documented in the manuscript. See `docs/internal/deviations_log.md` for the full deviation record.
+
 **Implementation:** `scripts/power_assessment.py`
 
 ---
@@ -309,10 +311,11 @@ Conversion: multiply km^2/s^2/kpc by 1e6 / 3.0857e19 to get m/s^2.
 
 ## 14. References
 
-1. Hunter, D. A. et al. (2012). AJ, 144, 134. "LITTLE THINGS."
-2. Lelli, F., McGaugh, S. S., & Schombert, J. M. (2016). AJ, 152, 157. "SPARC: Mass Models for 175 Disk Galaxies."
+1. de Blok, W. J. G. et al. (2008). AJ, 136, 2648. "High-Resolution Rotation Curves and Galaxy Mass Models from THINGS."
+2. Hunter, D. A. et al. (2012). AJ, 144, 134. "LITTLE THINGS."
 3. Kass, R. E. & Raftery, A. E. (1995). JASA, 90, 773. "Bayes Factors."
-4. Schwarz, G. (1978). Annals of Statistics, 6, 461. "Estimating the Dimension of a Model."
+4. Lelli, F., McGaugh, S. S., & Schombert, J. M. (2016). AJ, 152, 157. "SPARC: Mass Models for 175 Disk Galaxies."
 5. Schneider, J. (2026a). Ap&SS (submitted). "A Rational Taper Model for Galaxy Rotation Curves."
 6. Schneider, J. (2026b). (submitted). "Rational Taper Validation: A Four-Model Comparison Across 175 SPARC Galaxies."
-7. Walter, F. et al. (2008). AJ, 136, 2563. "THINGS: The HI Nearby Galaxy Survey."
+7. Schwarz, G. (1978). Annals of Statistics, 6, 461. "Estimating the Dimension of a Model."
+8. Walter, F. et al. (2008). AJ, 136, 2563. "THINGS: The HI Nearby Galaxy Survey."

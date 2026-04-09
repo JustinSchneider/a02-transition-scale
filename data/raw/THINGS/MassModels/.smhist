@@ -1,0 +1,18 @@
+data NGC925.ISO.fix.REV.dat
+read {r 1 vIS 3}
+data NGC925.NFW.fix.REV.dat
+read {r 1 vNS 3}
+data NGC925.NFW.fix.REV.Kr.dat
+read {r 1 vNK 3}
+data NGC925.ISO.fix.REV.Kr.dat
+read {r 1 vIK 3}
+limits r 0 140
+box
+connect r vIS
+ctype red
+connect r vIK
+ltype 1
+connect r vNK
+ctype black
+connect r vNS
+quit

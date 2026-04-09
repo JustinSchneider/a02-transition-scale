@@ -222,9 +222,14 @@ def run_gate6_validation(db_path: str = None, force: bool = False) -> pd.DataFra
     print(f"  Galaxies fitted:     {n_fitted}")
     print(f"  Skipped (existing):  {n_skipped}")
     print(f"  No valid Rt:         {n_no_solution}")
+
+    if len(df) == 0:
+        print(f"\n  All galaxies skipped (existing fits in DB).")
+        return df
+
     print(f"  Converged:           {df['converged'].sum()}")
 
-    if len(df) > 0 and df["converged"].any():
+    if df["converged"].any():
         converged = df[df["converged"]]
         print(f"\n  --- BIC Comparison (constrained - free) ---")
         print(f"  Median dBIC (all converged):  {converged['delta_bic'].median():+.2f}")

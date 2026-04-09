@@ -32,3 +32,6 @@ results/
 
 # Internal project documents, not to be disseminated
 internal/
+
+# HI Moment 0 maps
+/data/raw/HIMaps
