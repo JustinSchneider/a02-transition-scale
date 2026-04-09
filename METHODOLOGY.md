@@ -172,7 +172,7 @@ delta_log_g = log10(g(R_t)) - log10(g_trend)
 
 **Primary test:** Wilcoxon signed-rank test on THINGS residuals (out-of-sample). If residuals center on zero: BTFR fully explains g(R_t) in the new dataset (artifact). If residuals center on a nonzero offset corresponding to a0/2: alignment is genuine.
 
-**Implementation:** Numerical anchors verified in `scripts/power_assessment.py`. Statistical test to be implemented in Phase 2 analysis.
+**Implementation:** `src/btfr.py :: compute_btfr_residuals()`, `run_btfr_covariance_test()`, `compute_mbar_for_sample()`. SPARC baseline validated in NB02 (scatter 0.409 → 0.277 dex, Wilcoxon p = 0.654). Numerical anchors verified in `scripts/power_assessment.py`.
 
 ---
 
@@ -269,13 +269,14 @@ python -m src.fit --gate6 --force  # Rerun, deleting existing constrained fits
 | Phase        | Description                                                                        | Status                           |
 | ------------ | ---------------------------------------------------------------------------------- | -------------------------------- |
 | Pre-analysis | Gates 1-6: lock plan, verify anchors, power simulation, overlap, constrained model | **COMPLETE**                     |
-| 1            | SPARC baseline: reproduce Paper 2 g(R_t) result                                    | **COMPLETE** (N=98, 8.5% offset) |
-| 2            | BTFR covariance test: fixed-slope residuals + signed-rank test                     | Not started                      |
-| 3            | Constrained model BIC comparison on SPARC                                          | **COMPLETE** (not competitive)   |
-| 4            | THINGS replication: galaxy-by-galaxy comparison with SPARC                         | Not started                      |
-| 5            | LITTLE THINGS: dwarf-regime stress test                                            | Not started                      |
-| 6            | PROBES: exploratory morphological/environmental stratification                     | Not started                      |
-| 7            | Synthesis and manuscript                                                           | Not started                      |
+| 1            | SPARC baseline: reproduce Paper 2 g(R_t) result                                    | **COMPLETE** (N=98, 8.5% offset)                |
+| 2            | BTFR covariance test: fixed-slope residuals + signed-rank test                     | **COMPLETE** (scatter 0.409→0.277 dex, p=0.654) |
+| 3            | Constrained model BIC comparison on SPARC                                          | **COMPLETE** (not competitive)                   |
+| 4            | THINGS ingestion and baryonic decomposition                                        | **COMPLETE** (17 galaxies in DB, NB04-NB06)  |
+| 5            | THINGS replication: galaxy-by-galaxy comparison with SPARC                         | Not started                      |
+| 6            | LITTLE THINGS: dwarf-regime stress test                                            | Not started                      |
+| 7            | PROBES: exploratory morphological/environmental stratification                     | Not started                      |
+| 8            | Synthesis and manuscript                                                           | Not started                      |
 
 ---
 
