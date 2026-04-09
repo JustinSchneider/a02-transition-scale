@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.egg
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# PDFs — large binaries; cite by reference instead
+*.pdf
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Results and generated output (track via releases, not git)
+results/
+
+# Internal project documents, not to be disseminated
+internal/
