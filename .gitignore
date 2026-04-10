@@ -30,6 +30,9 @@ Desktop.ini
 # Results and generated output (track via releases, not git)
 results/
 
+# Manuscript should be tracked separately
+manuscript/
+
 # Internal project documents, not to be disseminated
 docs/internal/*
 
