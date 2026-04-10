@@ -232,12 +232,23 @@ def fit_rational_taper(
 
     initial_guesses = [(5.0, 5.0), (10.0, 2.0), (2.0, 15.0), (20.0, r_max)]
 
+    # Clamp initial guesses to bounds
+    lo = [omega_bounds[0], rt_bounds[0]]
+    hi = [omega_bounds[1], rt_upper]
+    clamped_guesses = []
+    for p0 in initial_guesses:
+        p0_clamped = [
+            max(lo[i] + 1e-6, min(p0[i], hi[i] - 1e-6))
+            for i in range(2)
+        ]
+        clamped_guesses.append(tuple(p0_clamped))
+
     best_chi2 = np.inf
     best_popt = None
     best_pcov = None
     converged = False
 
-    for p0 in initial_guesses:
+    for p0 in clamped_guesses:
         try:
             popt, pcov = curve_fit(
                 _model, radius, v_obs, p0=list(p0), sigma=v_err_safe,
@@ -253,7 +264,7 @@ def fit_rational_taper(
                 best_popt = popt
                 best_pcov = pcov
                 converged = True
-        except RuntimeError:
+        except (RuntimeError, ValueError):
             pass
 
     if not converged:

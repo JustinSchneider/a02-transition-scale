@@ -199,9 +199,9 @@ where chi^2 is the total weighted chi-squared, k is the number of free parameter
 
 The SQLite database (`data/galaxy_dynamics.db`) uses three tables inherited from Paper 2:
 
-- **`galaxies`** (175 rows) — Metadata: distance, inclination, luminosity, disk scale length, quality flag
-- **`radial_profiles`** (3391 rows) — Per-radius velocity components from SPARC
-- **`model_fits`** (700 + Paper 3 additions) — One row per (galaxy, model) fit
+- **`galaxies`** (192 rows) — Metadata: distance, inclination, luminosity, disk scale length, quality flag (175 SPARC + 17 THINGS)
+- **`radial_profiles`** (~5300 rows) — Per-radius velocity components from SPARC and THINGS
+- **`model_fits`** (700+ rows, including THINGS RT and constrained fits) — One row per (galaxy, model) fit
 
 The `model_fits` table uses generic `param1`/`param2` columns whose semantics depend on `model_name`:
 
@@ -273,7 +273,7 @@ python -m src.fit --gate6 --force  # Rerun, deleting existing constrained fits
 | 2            | BTFR covariance test: fixed-slope residuals + signed-rank test                     | **COMPLETE** (scatter 0.409→0.277 dex, p=0.654) |
 | 3            | Constrained model BIC comparison on SPARC                                          | **COMPLETE** (not competitive)                   |
 | 4            | THINGS ingestion and baryonic decomposition                                        | **COMPLETE** (17 galaxies in DB, NB04-NB06)  |
-| 5            | THINGS replication: galaxy-by-galaxy comparison with SPARC                         | Not started                      |
+| 5            | THINGS fitting, cross-validation, and primary confirmatory tests                   | **COMPLETE** (NB07-NB10, see §15)|
 | 6            | LITTLE THINGS: dwarf-regime stress test                                            | Not started                      |
 | 7            | PROBES: exploratory morphological/environmental stratification                     | Not started                      |
 | 8            | Synthesis and manuscript                                                           | Not started                      |
@@ -310,7 +310,67 @@ Conversion: multiply km^2/s^2/kpc by 1e6 / 3.0857e19 to get m/s^2.
 
 ---
 
-## 14. References
+## 15. THINGS Results (Block 3)
+
+### RT Fitting (NB07)
+
+The free RT model was fitted to all 17 THINGS galaxies (13 overlap + 4 non-overlap). All 17 converged. 10 are spatially resolved (Rt < R_max), yielding a resolved fraction of 58.8% — lower than Paper 2's 70.3% but within expected small-N variation (expected ~12 resolved at the Paper 2 rate).
+
+Two resolved galaxies have non-computable g(Rt) because Rt falls below the innermost radial data point: NGC 3031 (Rt = 1.53 kpc, R_min = 2.43 kpc due to inner bar exclusion) and NGC 4736 (Rt = 0.22 kpc, R_min = 0.45 kpc; degenerate fit with omega at upper bound). See Deviations 4-5 in `docs/deviations_log.md`.
+
+Effective sample for g(Rt) analysis: **N = 8** (7 overlap + 1 non-overlap).
+
+### Cross-Pipeline Validation (NB08)
+
+For the 13 overlap galaxies, 5 are resolved in both SPARC and THINGS, 5 are unresolved in both, and 3 show resolution status flips (NGC 2976, NGC 3521, NGC 7793). Among the 5 both-resolved galaxies:
+
+- Median delta log g (THINGS - SPARC) = +0.015 dex (no systematic offset)
+- Wilcoxon p = 0.812 (cannot reject zero-offset hypothesis)
+- Per-galaxy scatter: std = 0.088 dex
+
+The cross-pipeline comparison confirms that THINGS and SPARC yield consistent g(Rt) values when both resolve the taper.
+
+### Primary BTFR Test (NB09)
+
+| Metric | SPARC (NB02) | THINGS (NB09) |
+|--------|-------------|---------------|
+| N resolved | 98 | 8 |
+| Median g(Rt) | 6.51e-11 m/s^2 | 8.73e-11 m/s^2 |
+| Offset from a0/2 | +8.5% | +45.6% |
+| Raw scatter | 0.409 dex | 0.346 dex |
+| BTFR-residual scatter | 0.277 dex | 0.210 dex |
+| Median BTFR residual | ~0 (anchored) | +0.049 dex |
+| Wilcoxon p-value | 0.654 | 0.547 |
+
+**Outcome: INCONCLUSIVE.** The raw median g(Rt) exceeds the +/-10% alignment threshold (+45.6%), but the Wilcoxon signed-rank test cannot reject the zero-median hypothesis (p = 0.547). The BTFR-corrected residuals are close to zero (median +0.049 dex). The result is underpowered at N = 8 — a single outlier (NGC 2841, g/a0_half = 9.4) dominates the raw median. This will be explicitly documented per Deviation 1 (power loss accepted).
+
+### Constrained Model (NB10)
+
+| Metric | SPARC (NB03) | THINGS (NB10) |
+|--------|-------------|---------------|
+| No-solution rate | 75% (92/123) | 76% (13/17) |
+| Converged | 31 | 4 |
+| Median delta_BIC | +96.88 | +456.86 |
+| Free wins | 30/31 | 3/4 |
+| Constrained wins | 1/31 | 1/4 |
+
+The high no-solution rate and decisive BIC preference for the free model replicate the SPARC finding. The g(Rt) = a0/2 constraint remains too restrictive for individual galaxies.
+
+**Implementation:** NB07-NB10 in `notebooks/`, results in `results/NB07-NB10_*.csv`.
+
+---
+
+## 16. Deviations from Pre-Registration
+
+See `docs/deviations_log.md` for the full record. Key deviations affecting Block 3:
+
+1. **Deviation 1:** THINGS retained as primary despite N ~ 13 < 15 threshold (power loss accepted)
+2. **Deviation 4:** `fit_rational_taper()` bounds fix (initial guesses clamped; backwards-compatible)
+3. **Deviation 5:** NGC 3031 and NGC 4736 excluded from g(Rt) analysis (Rt below R_min)
+
+---
+
+## 17. References
 
 1. de Blok, W. J. G. et al. (2008). AJ, 136, 2648. "High-Resolution Rotation Curves and Galaxy Mass Models from THINGS."
 2. Hunter, D. A. et al. (2012). AJ, 144, 134. "LITTLE THINGS."
