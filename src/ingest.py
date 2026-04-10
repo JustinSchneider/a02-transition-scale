@@ -1,8 +1,8 @@
 """Data loading utilities for Paper 3.
 
 Paper 3 reads from the existing galaxy_dynamics.db (populated in Paper 2)
-and SPARC raw data files. No new data ingestion pipeline is needed for the
-SPARC baseline; this module provides helpers for loading profiles and metadata.
+and SPARC raw data files. Also provides loaders for THINGS (de Blok et al. 2008)
+and LITTLE THINGS (Oh et al. 2015) external datasets.
 """
 
 from pathlib import Path
@@ -246,3 +246,127 @@ def load_things_mass_model(model_path: str) -> pd.DataFrame:
     logger.info("Loaded THINGS mass model: %s (%d points)",
                 Path(model_path).stem, len(df))
     return df
+
+
+# ---------------------------------------------------------------------------
+# LITTLE THINGS data loaders (Oh et al. 2015)
+# ---------------------------------------------------------------------------
+
+def load_little_things_galaxies(csv_path: str = None) -> pd.DataFrame:
+    """Load LITTLE THINGS galaxy metadata from Oh et al. (2015) galaxies.csv.
+
+    Replaces sentinel values (1e+20) for missing stellar masses with NaN.
+
+    Returns DataFrame with all columns from the VizieR galaxies table.
+    Key columns: Name, Dist (Mpc), i (deg), Mgas (1e7 Msun),
+    MstarK (1e7 Msun), MstarSED (1e7 Msun), Rmax (kpc).
+    """
+    if csv_path is None:
+        csv_path = str(
+            get_project_root() / "data" / "raw" / "LITTLE_THINGS" / "galaxies.csv"
+        )
+    df = pd.read_csv(csv_path)
+    # Replace sentinel 1e+20 with NaN for missing stellar masses
+    for col in ["MstarK", "MstarSED"]:
+        if col in df.columns:
+            df.loc[df[col] > 1e10, col] = np.nan
+    logger.info("Loaded %d LITTLE THINGS galaxies", len(df))
+    return df
+
+
+def load_little_things_rotcurves(
+    dmbar_path: str = None,
+    dm_path: str = None,
+) -> tuple[dict[str, pd.DataFrame], dict[str, pd.DataFrame]]:
+    """Load and de-normalize LITTLE THINGS rotation curves.
+
+    Reads rotdmbar.csv (total V_obs) and rotdm.csv (DM-only, baryonic
+    subtracted). Filters to Type='Data' rows and converts from normalized
+    to physical units using per-galaxy R0.3 (kpc) and V0.3 (km/s).
+
+    Returns:
+        (dmbar_dict, dm_dict) where each maps galaxy Name -> DataFrame
+        with columns: radius_kpc, v_kms, v_err_kms
+    """
+    lt_dir = get_project_root() / "data" / "raw" / "LITTLE_THINGS"
+    if dmbar_path is None:
+        dmbar_path = str(lt_dir / "rotdmbar.csv")
+    if dm_path is None:
+        dm_path = str(lt_dir / "rotdm.csv")
+
+    def _load_and_denorm(path: str) -> dict[str, pd.DataFrame]:
+        raw = pd.read_csv(path)
+        data = raw[raw["Type"] == "Data"].copy()
+        result = {}
+        for name, grp in data.groupby("Name"):
+            r03 = grp["R0.3"].iloc[0]
+            v03 = grp["V0.3"].iloc[0]
+            result[name] = pd.DataFrame({
+                "radius_kpc": grp["R"].values * r03,
+                "v_kms": grp["V"].values * v03,
+                "v_err_kms": grp["e_V"].values * v03,
+            })
+        return result
+
+    dmbar = _load_and_denorm(dmbar_path)
+    dm = _load_and_denorm(dm_path)
+    logger.info("Loaded LITTLE THINGS rotation curves: %d dmbar, %d dm",
+                len(dmbar), len(dm))
+    return dmbar, dm
+
+
+def derive_little_things_vbary(
+    dmbar_df: pd.DataFrame,
+    dm_df: pd.DataFrame,
+) -> pd.DataFrame:
+    """Derive baryonic velocity from total and DM-only rotation curves.
+
+    V_bary = sqrt(max(0, V_total^2 - V_dm^2)) at each radius.
+
+    The DM curve is interpolated onto the total curve's radial grid.
+
+    Returns DataFrame with columns:
+        radius_kpc, v_obs, v_err, v_baryon_total, n_clamped
+    where n_clamped is the number of points where V_dm > V_total (clamped to 0).
+    """
+    r_obs = dmbar_df["radius_kpc"].values
+    v_obs = dmbar_df["v_kms"].values
+    v_err = dmbar_df["v_err_kms"].values
+
+    r_dm = dm_df["radius_kpc"].values
+    v_dm_raw = dm_df["v_kms"].values
+
+    # Interpolate DM velocity onto the observed radial grid
+    v_dm_interp = np.interp(r_obs, r_dm, v_dm_raw)
+
+    # V_bary^2 = V_total^2 - V_dm^2
+    v_bary_sq = v_obs ** 2 - v_dm_interp ** 2
+    n_clamped = int(np.sum(v_bary_sq < 0))
+    v_bary = np.sqrt(np.maximum(0.0, v_bary_sq))
+
+    return pd.DataFrame({
+        "radius_kpc": r_obs,
+        "v_obs": v_obs,
+        "v_err": v_err,
+        "v_baryon_total": v_bary,
+    }), n_clamped
+
+
+def compute_mbar_little_things(
+    mgas_1e7: float,
+    mstar_1e7: float,
+    helium_factor: float = 1.33,
+) -> float:
+    """Compute baryonic mass from LITTLE THINGS table values.
+
+    Args:
+        mgas_1e7: HI gas mass in units of 10^7 Msun.
+        mstar_1e7: Stellar mass in units of 10^7 Msun (NaN if missing).
+        helium_factor: Helium correction (default 1.33).
+
+    Returns:
+        Total baryonic mass in Msun.
+    """
+    m_gas = mgas_1e7 * 1e7
+    m_star = mstar_1e7 * 1e7 if np.isfinite(mstar_1e7) else 0.0
+    return helium_factor * m_gas + m_star

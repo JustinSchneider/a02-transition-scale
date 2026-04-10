@@ -32,6 +32,15 @@ The analysis plan was pre-registered before acquiring any THINGS data (commit dc
 - **Bulge luminosities:** `data/raw/Bulges.mrt` — L_bulge at 3.6 um for 175 galaxies (32 nonzero)
 - **Paper 2 fit results:** `data/galaxy_dynamics.db` (SQLite), `data/supplemental/Tournament_Results.csv`
 
+### LITTLE THINGS Data Files
+
+Source: Oh et al. (2015), AJ, 149, 180. VizieR catalog `J/AJ/149/180`. Downloaded via `scripts/fetch_little_things.py` using `astroquery`.
+
+- **Galaxy metadata:** `data/raw/LITTLE_THINGS/galaxies.csv` — 26 galaxies with distances, inclinations, masses (Mgas, MstarK, MstarSED), rotation curve scale parameters (R0.3, V0.3), and dark matter halo fits
+- **Rotation curves:** `data/raw/LITTLE_THINGS/rotdmbar.csv` — 1716 rows of normalized rotation curves (baryonic contribution included). Columns: Name, Type (Data|Model), R0.3 (kpc), V0.3 (km/s), R (normalized), V (normalized), e_V. Physical radius = R * R0.3; physical velocity = V * V0.3.
+
+Note: Oh et al. (2015) published rotation curves for 26 of the 41 LITTLE THINGS parent sample galaxies (Hunter et al. 2012). The `rotdmbar` table provides rotation curves with baryonic mass subtraction already applied; the `rotdm` table (DM-only, not downloaded) uses a different baryonic subtraction. DDO 154 appears in all three datasets (SPARC, THINGS, LITTLE THINGS) and serves as a cross-pipeline consistency check.
+
 ### THINGS/SPARC Overlap
 
 The THINGS survey parent sample comprises 34 galaxies (Walter et al. 2008), but rotation curves were published for only 19 of them (de Blok et al. 2008). Of these 19, 13 appear in SPARC and 6 are THINGS-only. Full cross-reference in `data/things_sparc_overlap.csv`. For overlap galaxies, SPARC baryonic profiles are used with THINGS rotation curves (isolates the kinematic data while holding the baryonic baseline constant). Non-overlap galaxies require independent baryonic decomposition from S4G + THINGS HI maps.
@@ -261,6 +270,7 @@ python -m src.fit --gate6 --force  # Rerun, deleting existing constrained fits
 ### Standalone Scripts
 
 - `scripts/power_assessment.py` — Gate 2-3: numerical anchor verification and THINGS power simulation
+- `scripts/fetch_little_things.py` — Block 4: download LITTLE THINGS data (Oh et al. 2015) from VizieR
 
 ---
 
@@ -274,7 +284,7 @@ python -m src.fit --gate6 --force  # Rerun, deleting existing constrained fits
 | 3            | Constrained model BIC comparison on SPARC                                          | **COMPLETE** (not competitive)                   |
 | 4            | THINGS ingestion and baryonic decomposition                                        | **COMPLETE** (17 galaxies in DB, NB04-NB06)  |
 | 5            | THINGS fitting, cross-validation, and primary confirmatory tests                   | **COMPLETE** (NB07-NB10, see §15)|
-| 6            | LITTLE THINGS: dwarf-regime stress test                                            | Not started                      |
+| 6            | LITTLE THINGS: dwarf-regime stress test                                            | **IN PROGRESS** (NB11-NB13)      |
 | 7            | PROBES: exploratory morphological/environmental stratification                     | Not started                      |
 | 8            | Synthesis and manuscript                                                           | Not started                      |
 
@@ -379,4 +389,5 @@ See `docs/deviations_log.md` for the full record. Key deviations affecting Block
 5. Schneider, J. (2026a). Ap&SS (submitted). "A Rational Taper Model for Galaxy Rotation Curves."
 6. Schneider, J. (2026b). (submitted). "Rational Taper Validation: A Four-Model Comparison Across 175 SPARC Galaxies."
 7. Schwarz, G. (1978). Annals of Statistics, 6, 461. "Estimating the Dimension of a Model."
-8. Walter, F. et al. (2008). AJ, 136, 2563. "THINGS: The HI Nearby Galaxy Survey."
+8. Oh, S.-H. et al. (2015). AJ, 149, 180. "High-Resolution Mass Models of Dwarf Galaxies from LITTLE THINGS."
+9. Walter, F. et al. (2008). AJ, 136, 2563. "THINGS: The HI Nearby Galaxy Survey."
